@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+	<meta charset="UTF-8">
+	<title>數學成績查詢系統</title>
+	<style>
+		body { font-family: Arial, sans-serif; padding: 20px; background-color: #ffe6f0; }
+		#result { margin-top: 20px; }
+		table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+		th {
+			border: 1px solid #ccc;
+			padding: 8px;
+			background-color: #f2f2f2;
+			text-align: center;
+		}
+		td {
+			border: 1px solid #ccc;
+			padding: 8px;
+			text-align: left;
+		}
+		section { 
+			margin-bottom: 20px; 
+			border: 1px solid #add8e6;
+			background-color: #f0f8ff;
+			padding: 10px;
+			border-radius: 4px;
+		}
+		.query-container {
+			text-align: center;
+			margin-bottom: 20px;
+		}
+		input[type="text"] {
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			padding: 8px;
+			font-size: 16px;
+			width: 250px;
+		}
+		button {
+			background-color: #4CAF50;
+			color: white;
+			padding: 8px 16px;
+			border: none;
+			border-radius: 4px;
+			font-size: 16px;
+			cursor: pointer;
+		}
+		button:hover { background-color: #45a049; }
+		h1 { text-align: center; font-size: 36px; }
+		h3 { text-align: center; }
+		.error-message {
+			color: #D8000C;
+			background-color: #FFBABA;
+			padding: 10px;
+			border: 1px solid #D8000C;
+			border-radius: 4px;
+			text-align: center;
+			margin-top: 20px;
+		}
+		.loading-message {
+			background-color: #b3d9ff;
+			color: #333;
+			padding: 20px;
+			border: 1px solid #5dade2;
+			border-radius: 4px;
+			text-align: center;
+			animation: fadeInOut 2s linear infinite;
+		}
+		@keyframes fadeInOut {
+			0% { opacity: 0; }
+			50% { opacity: 1; }
+			100% { opacity: 0; }
+		}
+	</style>
+</head>
+<body>
+	<h1>查詢系統</h1>
+	<div class="query-container">
+		<input type="text" id="query" placeholder="請輸入姓名或學號" />
+		<button id="searchBtn">查詢</button>
+	</div>
+	<div id="result">
+	</div>
+	<script>
+		const apiScores = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLj3yK-ysAGzTdAk7OBfckQ-j8vOpdaKPAlNDEPUMJ45CUd4rg9RmTeFHXMXq9vOd6-RUYRYgDt8M0_z-pLhDQu4yd3glMFNnpKv0ureKQ6AVSMFSA4pSMVN4Vs-2ENyliziOytmmuDN5DfUBAaa1PBVVYD6U2oc1XxSTbfY1tk-Th6vcIEILjMp60Of_qhQRhQkq5QCFQeo4S7tSHQpavodPUpVXm8ESr14t2YvkJVDW0PKz4l_i50s9RugGQ1GWIj1xXrlHkAkmRugUGiPxe4w9u499w&lib=M-DAu5nZSACWgSQDBcNmlNFt8SPypJ2J1";
+		const apiStudent = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLj3IfuRjaI_ITJlhkXfezTo1eewjTKxML4GV4Fmd8Ef6ULV6hwmvKHb2WxLyY1l3GxfKhI81dAnaJ_DTZI-hSl4ku8R8SQ8MyG_RUDHh97uJ8aP1RZsQXd3XkKtbKXEq9NIdJFv1h0PnkD4Clojt3Sv0NEMlgTiWUg4jlAHGcPb4HnfsnZI50fhpKxqtj2YVYHmCT2tYXZ7d5HvhP0UwM4ViPVwAmjq5vVreoCUKCy2Na7E8HWoRGET-cWn6elYAaouvilf6-eFdzqeRRA1nrWH7ej2kg&lib=M-DAu5nZSACWgSQDBcNmlNFt8SPypJ2J1";
+		const apiSummary = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgSXrSX-ljE336bKJ-L5M5I8H01tl983ZrRh4JIv9G7mxBkOns4LKrn0fdj8gNAX8WDSMfMhb3l0GblUX6CJ_ywAC3MU6JvwSK6Aq4AOjOZv8RBlk7gmIDayB-vdq5OMXpmAHhWQd66Me80LMgfGQ83f4SzyyinoNtUfJ8TBKyMuoXzRN_sW0iFm9yg4XtMGomT9nHTf78wGCSL2nl6JJaPhqbE2QPnqqMWSMA23-LYUddnsV58_fhyVfb1PG6nTcohYEq4uxwLnsOEuqdUOGZz_tqLWQ";
+		function objectToTable(obj, title) {
+			let html = `<section><h3>${title}</h3><table>`;
+			if(title !== "個人資料") {
+				html += "<tr><th>項目</th><th>成績</th></tr>";
+			}
+			for(let key in obj) {
+				html += `<tr><td>${key}</td><td>${obj[key]}</td></tr>`;
+			}
+			html += "</table></section>";
+			return html;
+		}
+		function arrayToTable(arr, title) {
+			if(arr.length === 0) return "";
+			let html = `<section><h3>${title}</h3><table>`;
+			const keys = Object.keys(arr[0]);
+			html += "<tr>";
+			keys.forEach(key => { html += `<th>${key}</th>`; });
+			html += "</tr>";
+			arr.forEach(item => {
+				html += "<tr>";
+				keys.forEach(key => { html += `<td>${item[key]}</td>`; });
+				html += "</tr>";
+			});
+			html += "</table></section>";
+			return html;
+		}
+		document.getElementById('searchBtn').addEventListener('click', async () => {
+			const rawQuery = document.getElementById('query').value.trim();
+			const resultDiv = document.getElementById('result');
+			resultDiv.innerHTML = "<div class='loading-message'>載入中...</div>";
+			if (/^\d+$/.test(rawQuery)) {
+				try {
+					const resStudent = await fetch(apiStudent);
+					const dataStudent = await resStudent.json();
+					if (dataStudent[rawQuery]) {
+						const studentInfo = dataStudent[rawQuery];
+						const studentName = studentInfo.姓名;
+						const [resScores, resSummary] = await Promise.all([ fetch(apiScores), fetch(apiSummary) ]);
+						const dataScores = await resScores.json();
+						const dataSummary = await resSummary.json();
+						const scoreInfo = dataScores[studentName];
+						const summaryInfo = dataSummary[studentName];
+						let html = "";
+						html += objectToTable(studentInfo, "個人資料");
+						if (scoreInfo) {
+							html += arrayToTable(scoreInfo, "分項成績");
+						} else {
+							html += "<section><h3>分項成績</h3>查無分項成績資料</section>";
+						}
+						if (summaryInfo) {
+							html += objectToTable(summaryInfo, "總成績");
+						} else {
+							html += "<section><h3>總成績</h3>查無總成績資料</section>";
+						}
+						resultDiv.innerHTML = html;
+					} else {
+						resultDiv.innerHTML = '<div class="error-message">查無此學號資料</div>';
+					}
+				} catch (error) {
+					resultDiv.innerHTML = "查詢失敗: " + error;
+				}
+			} else {
+				try {
+					const [resScores, resSummary, resStudent] = await Promise.all([ fetch(apiScores), fetch(apiSummary), fetch(apiStudent) ]);
+					const dataScores = await resScores.json();
+					const dataSummary = await resSummary.json();
+					const dataStudent = await resStudent.json();
+					let studentInfo = null;
+					for (const key in dataStudent) {
+						if (dataStudent[key].姓名 === rawQuery) { studentInfo = dataStudent[key]; break; }
+					}
+					const scoreInfo = dataScores[rawQuery];
+					const summaryInfo = dataSummary[rawQuery];
+					if (studentInfo || scoreInfo || summaryInfo) {
+						let html = "";
+						if (studentInfo) {
+							html += objectToTable(studentInfo, "個人資料");
+						} else {
+							html += `<section><h3>個人資料</h3><div class="error-message">查無個人資料</div></section>`;
+						}
+						if (scoreInfo) {
+							html += arrayToTable(scoreInfo, "分項成績");
+						} else {
+							html += "<section><h3>分項成績</h3>查無分項成績資料</section>";
+						}
+						if (summaryInfo) {
+							html += objectToTable(summaryInfo, "總成績");
+						} else {
+							html += "<section><h3>總成績</h3>查無總成績資料</section>";
+						}
+						resultDiv.innerHTML = html;
+					} else {
+						resultDiv.innerHTML = '<div class="error-message">查無此姓名資料</div>';
+					}
+				} catch (error) {
+					resultDiv.innerHTML = "查詢失敗: " + error;
+				}
+			}
+		});
+	</script>
+</body>
+</html>
