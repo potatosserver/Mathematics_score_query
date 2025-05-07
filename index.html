@@ -9,8 +9,8 @@
 		#result { margin-top: 20px; }
 		table { 
 			border-collapse: collapse; 
-			width: 50%; /* 修改為 90% */
-			margin: 0 auto 20px auto; /* 居中設定並避免緊貼邊緣 */
+			width: 50%; 
+			margin: 0 auto 20px auto;
 		}
 		th {
 			border: 1px solid #ccc;
@@ -24,10 +24,12 @@
 			text-align: left;
 		}
 		section { 
-			margin-bottom: 20px; 
+			/* 修改：增加外邊距避免貼近螢幕邊緣，並設定最大寬度 */
+			margin: 20px auto;
+			max-width: 500px; 
+			padding: 10px; /* 如有需要，可增加內邊距 */
 			border: 1px solid #add8e6;
 			background-color: #f0f8ff;
-			padding: 10px;
 			border-radius: 4px;
 		}
 		.query-container {
