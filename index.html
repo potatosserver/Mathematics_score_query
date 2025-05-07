@@ -7,7 +7,11 @@
 	<style>
 		body { font-family: Arial, sans-serif; padding: 20px; background-color: #ffe6f0; }
 		#result { margin-top: 20px; }
-		table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+		table { 
+			border-collapse: collapse; 
+			width: 50%; /* 修改為 90% */
+			margin: 0 auto 20px auto; /* 居中設定並避免緊貼邊緣 */
+		}
 		th {
 			border: 1px solid #ccc;
 			padding: 8px;
@@ -49,7 +53,7 @@
 			border-radius: 4px;
 			font-size: 16px;
 			cursor: pointer;
-			white-space: nowrap; // 新增防止文字擠壓
+			white-space: nowrap;
 		}
 		button:hover { background-color: #45a049; }
 		h1 { text-align: center; font-size: 36px; }
@@ -62,6 +66,8 @@
 			border-radius: 4px;
 			text-align: center;
 			margin-top: 20px;
+			width: 20%; /* 新增：設定寬度為 10% */
+			margin: 20px auto; /* 新增：置中並與上方/下方保持間距 */
 		}
 		.loading-message {
 			background-color: #b3d9ff;
@@ -71,6 +77,8 @@
 			border-radius: 4px;
 			text-align: center;
 			animation: fadeInOut 2s linear infinite;
+			margin: 20px auto; /* 新增：置中且與邊界保有間距 */
+			width: 10%; /* 新增：調整寬度 */
 		}
 		@keyframes fadeInOut {
 			0% { opacity: 0; }
@@ -159,7 +167,7 @@
 						resultDiv.innerHTML = '<div class="error-message">查無此學號資料</div>';
 					}
 				} catch (error) {
-					resultDiv.innerHTML = "查詢失敗: " + error;
+					resultDiv.innerHTML = `<div class="error-message">查詢失敗: ${error}</div>`; // 修改：包裝查詢失敗訊息
 				}
 			} else {
 				try {
@@ -195,7 +203,7 @@
 						resultDiv.innerHTML = '<div class="error-message">查無此姓名資料</div>';
 					}
 				} catch (error) {
-					resultDiv.innerHTML = "查詢失敗: " + error;
+					resultDiv.innerHTML = `<div class="error-message">查詢失敗: ${error}</div>`; // 修改：包裝查詢失敗訊息
 				}
 			}
 		});
