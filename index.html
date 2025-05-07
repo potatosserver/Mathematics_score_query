@@ -199,6 +199,11 @@
 				}
 			}
 		});
+		document.getElementById('query').addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				document.getElementById('searchBtn').click();
+			}
+		});
 	</script>
 </body>
 </html>
