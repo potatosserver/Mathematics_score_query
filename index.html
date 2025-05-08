@@ -9,8 +9,8 @@
 		#result { margin-top: 20px; }
 		table { 
 			border-collapse: collapse; 
-			width: 50%; 
-			margin: 0 auto 20px auto;
+			width: calc(100% - 40px); /* 修改：將表格寬度調整，左右留 20px 空隙 */
+			margin: 0 auto 20px auto; /* 修改：置中表格，並在左右留空隙 */
 		}
 		th {
 			border: 1px solid #ccc;
@@ -24,8 +24,7 @@
 			text-align: left;
 		}
 		section { 
-			/* 修改：縮小區塊左右內邊距 */
-			margin: 20px auto;
+			margin: 20px 0; /* 修改：去除左右自動邊距，僅保留上下間距 */
 			max-width: 500px; 
 			border: 1px solid #add8e6;
 			background-color: #f0f8ff;
@@ -37,7 +36,7 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			gap: 10px;
+			gap: 20px; 
 		}
 		input[type="text"] {
 			border: 1px solid #ccc;
