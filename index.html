@@ -38,7 +38,7 @@
 			justify-content: center;
 			gap: 20px; 
 		}
-		input[type="text"] {
+		input[type="text"], input[type="password"] {
 			border: 1px solid #ccc;
 			border-radius: 4px;
 			padding: 8px;
@@ -89,7 +89,7 @@
 			body { font-size: 18px; padding: 20px; }
 			h1 { font-size: 42px; }
 			h3 { font-size: 28px; }
-			input[type="text"] { width: 100%; font-size: 18px; }
+			input[type="text"], input[type="password"] { width: 100%; font-size: 18px; }
 			button { font-size: 18px; padding: 12px 20px; }
 			table th, table td { padding: 12px; }
 			.loading-message { font-size: 18px; padding: 25px; }
@@ -100,14 +100,12 @@
 	<h1>數學成績查詢系統</h1>
 	<div class="query-container">
 		<input type="text" id="query" placeholder="請輸入姓名或學號" />
+		<input type="password" id="password" placeholder="請輸入密碼" />
 		<button id="searchBtn">查詢</button>
 	</div>
 	<div id="result">
 	</div>
 	<script>
-		const apiScores = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLj3yK-ysAGzTdAk7OBfckQ-j8vOpdaKPAlNDEPUMJ45CUd4rg9RmTeFHXMXq9vOd6-RUYRYgDt8M0_z-pLhDQu4yd3glMFNnpKv0ureKQ6AVSMFSA4pSMVN4Vs-2ENyliziOytmmuDN5DfUBAaa1PBVVYD6U2oc1XxSTbfY1tk-Th6vcIEILjMp60Of_qhQRhQkq5QCFQeo4S7tSHQpavodPUpVXm8ESr14t2YvkJVDW0PKz4l_i50s9RugGQ1GWIj1xXrlHkAkmRugUGiPxe4w9u499w&lib=M-DAu5nZSACWgSQDBcNmlNFt8SPypJ2J1";
-		const apiStudent = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLj3IfuRjaI_ITJlhkXfezTo1eewjTKxML4GV4Fmd8Ef6ULV6hwmvKHb2WxLyY1l3GxfKhI81dAnaJ_DTZI-hSl4ku8R8SQ8MyG_RUDHh97uJ8aP1RZsQXd3XkKtbKXEq9NIdJFv1h0PnkD4Clojt3Sv0NEMlgTiWUg4jlAHGcPb4HnfsnZI50fhpKxqtj2YVYHmCT2tYXZ7d5HvhP0UwM4ViPVwAmjq5vVreoCUKCy2Na7E8HWoRGET-cWn6elYAaouvilf6-eFdzqeRRA1nrWH7ej2kg&lib=M-DAu5nZSACWgSQDBcNmlNFt8SPypJ2J1";
-		const apiSummary = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgSXrSX-ljE336bKJ-L5M5I8H01tl983ZrRh4JIv9G7mxBkOns4LKrn0fdj8gNAX8WDSMfMhb3l0GblUX6CJ_ywAC3MU6JvwSK6Aq4AOjOZv8RBlk7gmIDayB-vdq5OMXpmAHhWQd66Me80LMgfGQ83f4SzyyinoNtUfJ8TBKyMuoXzRN_sW0iFm9yg4XtMGomT9nHTf78wGCSL2nl6JJaPhqbE2QPnqqMWSMA23-LYUddnsV58_fhyVfb1PG6nTcohYEq4uxwLnsOEuqdUOGZz_tqLWQ";
 		function objectToTable(obj, title) {
 			let html = `<section><h3>${title}</h3><table>`;
 			if(title !== "個人資料") {
@@ -122,7 +120,11 @@
 		function arrayToTable(arr, title) {
 			if(arr.length === 0) return "";
 			let html = `<section><h3>${title}</h3><table>`;
-			const keys = Object.keys(arr[0]);
+			// 修改：若標題為 "分項成績" 且只有兩個欄位，則對調欄位順序
+			let keys = Object.keys(arr[0]);
+			if(title === "分項成績" && keys.length === 2) { 
+				keys = [keys[1], keys[0]];
+			}
 			html += "<tr>";
 			keys.forEach(key => { html += `<th>${key}</th>`; });
 			html += "</tr>";
@@ -136,75 +138,38 @@
 		}
 		document.getElementById('searchBtn').addEventListener('click', async () => {
 			const rawQuery = document.getElementById('query').value.trim();
+			const password = document.getElementById('password').value.trim();
 			const resultDiv = document.getElementById('result');
 			resultDiv.innerHTML = "<div class='loading-message'>載入中...</div>";
-			if (/^\d+$/.test(rawQuery)) {
-				try {
-					const resStudent = await fetch(apiStudent);
-					const dataStudent = await resStudent.json();
-					if (dataStudent[rawQuery]) {
-						const studentInfo = dataStudent[rawQuery];
-						const studentName = studentInfo.姓名;
-						const [resScores, resSummary] = await Promise.all([ fetch(apiScores), fetch(apiSummary) ]);
-						const dataScores = await resScores.json();
-						const dataSummary = await resSummary.json();
-						const scoreInfo = dataScores[studentName];
-						const summaryInfo = dataSummary[studentName];
-						let html = "";
-						html += objectToTable(studentInfo, "個人資料");
-						if (scoreInfo) {
-							html += arrayToTable(scoreInfo, "分項成績");
-						} else {
-							html += "<section><h3>分項成績</h3>查無分項成績資料</section>";
-						}
-						if (summaryInfo) {
-							html += objectToTable(summaryInfo, "總成績");
-						} else {
-							html += "<section><h3>總成績</h3>查無總成績資料</section>";
-						}
-						resultDiv.innerHTML = html;
-					} else {
-						resultDiv.innerHTML = '<div class="error-message">查無此學號資料</div>';
-					}
-				} catch (error) {
-					resultDiv.innerHTML = `<div class="error-message">查詢失敗: ${error}</div>`; // 修改：包裝查詢失敗訊息
+			try {
+				const res = await fetch("https://andrewsteve.loca.lt/grade", {
+					method: "POST",
+					headers: {"Content-Type": "application/json"},
+					body: JSON.stringify({ query: rawQuery, password: password })
+				});
+				const data = await res.json();
+				// 新增：檢查返回資料是否包含 error，若有則顯示錯誤訊息
+				if (data.error) {
+					resultDiv.innerHTML = `<div class="error-message">查詢失敗: ${data.error}</div>`;
+					return;
 				}
-			} else {
-				try {
-					const [resScores, resSummary, resStudent] = await Promise.all([ fetch(apiScores), fetch(apiSummary), fetch(apiStudent) ]);
-					const dataScores = await resScores.json();
-					const dataSummary = await resSummary.json();
-					const dataStudent = await resStudent.json();
-					let studentInfo = null;
-					for (const key in dataStudent) {
-						if (dataStudent[key].姓名 === rawQuery) { studentInfo = dataStudent[key]; break; }
-					}
-					const scoreInfo = dataScores[rawQuery];
-					const summaryInfo = dataSummary[rawQuery];
-					if (studentInfo || scoreInfo || summaryInfo) {
-						let html = "";
-						if (studentInfo) {
-							html += objectToTable(studentInfo, "個人資料");
-						} else {
-							html += `<section><h3>個人資料</h3><div class="error-message">查無個人資料</div></section>`;
-						}
-						if (scoreInfo) {
-							html += arrayToTable(scoreInfo, "分項成績");
-						} else {
-							html += "<section><h3>分項成績</h3>查無分項成績資料</section>";
-						}
-						if (summaryInfo) {
-							html += objectToTable(summaryInfo, "總成績");
-						} else {
-							html += "<section><h3>總成績</h3>查無總成績資料</section>";
-						}
-						resultDiv.innerHTML = html;
-					} else {
-						resultDiv.innerHTML = '<div class="error-message">查無此姓名資料</div>';
-					}
-				} catch (error) {
-					resultDiv.innerHTML = `<div class="error-message">查詢失敗: ${error}</div>`; // 修改：包裝查詢失敗訊息
+				let html = "";
+				// 修改：「個人資料」使用 account 資料
+				html += objectToTable(data.account, "個人資料");
+				// 修改：「分項成績」使用 grades.details 的數列資料
+				if (data.grades.details && data.grades.details.length > 0) {
+					html += arrayToTable(data.grades.details, "分項成績");
+				} else {
+					html += "<section><h3>分項成績</h3>查無分項成績資料</section>";
 				}
+				if (data.grades.final && Object.keys(data.grades.final).length > 0) {
+					html += objectToTable(data.grades.final, "總成績");
+				} else {
+					html += "<section><h3>總成績</h3>查無總成績資料</section>";
+				}
+				resultDiv.innerHTML = html;
+			} catch (error) {
+				resultDiv.innerHTML = `<div class="error-message">查詢失敗: ${error}</div>`;
 			}
 		});
 		document.getElementById('query').addEventListener('keydown', (e) => {
