@@ -3,7 +3,7 @@
 
 前往[https://potatosserver.github.io/Mathematics_score_query](https://potatosserver.github.io/Mathematics_score_query)即可使用服務
 
-### 提供更簡單美觀的介面
+### 提供更簡單美觀的介面並提升資安保護
 
 ## 備註
 僅提供部分班級的成績查詢
