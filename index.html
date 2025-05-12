@@ -354,6 +354,8 @@
 			if (document.getElementById("loginOverlay")) {
 				document.getElementById("loginOverlay").remove();
 			}
+			// 新增：清除查詢結果資料
+			document.getElementById("result").innerHTML = "";
 			// 顯示登入介面
 			document.querySelector('.login-box').style.display = "block";
 		});
