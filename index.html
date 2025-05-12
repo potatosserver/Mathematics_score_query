@@ -76,17 +76,6 @@
 			width: 120px; /* 新增：設定寬度為 10% */
 			margin: 20px auto; /* 新增：置中並與上方/下方保持間距 */
 		}
-		.loading-message {
-			background-color: #b3d9ff;
-			color: #333;
-			padding: 20px;
-			border: 1px solid #5dade2;
-			border-radius: 4px;
-			text-align: center;
-			animation: fadeInOut 2s linear infinite;
-			margin: 30px auto; /* 新增：置中且與邊界保有間距 */
-			width: 100px; /* 新增：調整寬度 */
-		}
 		@keyframes fadeInOut {
 			0% { opacity: 0; }
 			50% { opacity: 1; }
@@ -105,7 +94,6 @@
 			input[type="text"], input[type="password"] { width: 100%; font-size: 18px; }
 			button { font-size: 18px; padding: 12px 20px; }
 			table th, table td { padding: 12px; }
-			.loading-message { font-size: 18px; padding: 25px; }
 		}
 		/* 新增：登出按鈕的樣式 */
 		#logoutBtn {
@@ -172,7 +160,7 @@
 	<h1>數學成績查詢系統</h1>
 	<!-- 新增：登出按鈕 -->
 	<button id="logoutBtn">登出</button>
-	<!-- 修改：將登入表單包在美化方框中 -->
+	<!-- 修改：將登入表單包在美化方框中，並新增錯誤訊息顯示區 -->
 	<div class="login-box">
 		<div class="query-container">
 			<input type="text" id="query" placeholder="請輸入姓名或學號" />
@@ -180,6 +168,8 @@
 			<!-- 新增：保持登入勾選框 -->
 			<label><input type="checkbox" id="keepLogin">保持登入</label>
 			<button id="searchBtn">查詢</button>
+			<!-- 新增：錯誤訊息 (移至此處，呈現紅色文字) -->
+			<div id="errorMsg" style="color:red; text-align:center; margin-top:10px;"></div>
 		</div>
 	</div>
 	<div id="result">
@@ -257,10 +247,12 @@
 			const rawQuery = document.getElementById('query').value.trim();
 			const password = document.getElementById('password').value.trim();
 			const resultDiv = document.getElementById('result');
-
+			const errorMsg = document.getElementById('errorMsg');
+			errorMsg.innerText = ""; // 清除先前錯誤訊息
+			
 			// 檢查是否有帳號和密碼
 			if (!rawQuery || !password) {
-				resultDiv.innerHTML = `<div class="error-message">請輸入帳號和密碼</div>`;
+				errorMsg.innerText = "請輸入帳號和密碼";
 				return;
 			}
 			
@@ -284,7 +276,7 @@
 			loginBox.appendChild(overlay);
 			
 			const keepLogin = document.getElementById('keepLogin').checked;
-			resultDiv.innerHTML = "<div class='loading-message'>載入中...</div>";
+			
 			try {
 				const res = await fetch("https://cc4pkp9n-80.asse.devtunnels.ms/grade", {
 					method: "POST",
@@ -292,10 +284,10 @@
 					body: JSON.stringify({ query: rawQuery, password: password })
 				});
 				const data = await res.json();
-				// 處理登入失敗：若回傳 error，顯示「登入失敗」彈窗提示
+				// 處理登入失敗：若回傳 error，顯示錯誤提示
 				if (data.error) {
-					alert("登入失敗"); // 新增：彈窗提示
-					resultDiv.innerHTML = `<div class="error-message">登入失敗</div>`;
+					alert("登入失敗");
+					errorMsg.innerText = "登入失敗";
 					document.getElementById('password').value = "";
 					if(document.getElementById("loginOverlay")) {
 						document.getElementById("loginOverlay").remove();
@@ -331,8 +323,8 @@
 				// 隱藏登入介面
 				document.querySelector('.login-box').style.display = "none";
 			} catch (error) {
-				alert("登入失敗"); // 新增：彈窗提示
-				resultDiv.innerHTML = `<div class="error-message">登入失敗</div>`;
+				alert("登入失敗");
+				errorMsg.innerText = "登入失敗";
 				document.getElementById('password').value = "";
 				if(document.getElementById("loginOverlay")) {
 					document.getElementById("loginOverlay").remove();
