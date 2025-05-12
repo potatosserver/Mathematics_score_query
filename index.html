@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>數學成績查詢系統</title>
 	<style>
-		body { font-family: Arial, sans-serif; padding: 20px; background-color: #ffe6f0; }
+		body { font-family: '微軟正黑體', Arial, sans-serif; padding: 20px; background-color: #ffe6f0; }
 		#result { margin-top: 20px; }
 		table { 
 			border-collapse: collapse; 
@@ -23,8 +23,14 @@
 			padding: 4px; /* 修改：由原本的 8px 縮減為 4px */
 			text-align: left;
 		}
+		/* 新增：將表格中第二欄（成績欄）的資料置中 */
+		table tr td:nth-child(2),
+		table tr th:nth-child(2) {
+			text-align: center;
+		}
 		section { 
-			margin: 20px 0; /* 修改：去除左右自動邊距，僅保留上下間距 */
+			/* 修改：將 margin 調整為置中 */
+			margin: 20px auto; 
 			max-width: 500px; 
 			border: 1px solid #add8e6;
 			background-color: #f0f8ff;
@@ -34,13 +40,14 @@
 			text-align: center;
 			margin-bottom: 20px;
 			display: flex;
+			flex-direction: column; /* 新增：改為縱向排列 */
 			align-items: center;
 			justify-content: center;
-			gap: 20px; 
+			gap: 15px; /* 調整間距 */
 		}
 		input[type="text"], input[type="password"] {
 			border: 1px solid #ccc;
-			border-radius: 4px;
+			border-radius: 8px; /* 新增：增大圓角 */
 			padding: 8px;
 			font-size: 16px;
 			width: 250px;
@@ -50,7 +57,7 @@
 			color: white;
 			padding: 8px 16px;
 			border: none;
-			border-radius: 4px;
+			border-radius: 8px; /* 新增：增大圓角 */
 			font-size: 16px;
 			cursor: pointer;
 			white-space: nowrap;
@@ -85,6 +92,12 @@
 			50% { opacity: 1; }
 			100% { opacity: 0; }
 		}
+		/* 新增：bounce 動畫，使「登入中...」文字跳動 */
+		@keyframes bounce {
+			0% { transform: translateY(0); }
+			50% { transform: translateY(-10px); }
+			100% { transform: translateY(0); }
+		}
 		@media (max-width: 600px) {
 			body { font-size: 18px; padding: 20px; }
 			h1 { font-size: 42px; }
@@ -94,18 +107,122 @@
 			table th, table td { padding: 12px; }
 			.loading-message { font-size: 18px; padding: 25px; }
 		}
+		/* 新增：登出按鈕的樣式 */
+		#logoutBtn {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			display: none;
+			background-color: #f44336;
+			color: white;
+			border: none;
+			border-radius: 4px;
+			padding: 8px 16px;
+			cursor: pointer;
+		}
+		/* 新增：登入框樣式 */
+		.login-box {
+			width: 300px;
+			margin: 100px auto;
+			padding: 20px;
+			border: 2px solid #ccc;
+			border-radius: 10px; /* 新增：更圓的角落 */
+			background-color: #fff;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 新增：輕微陰影 */
+			position: relative; /* 新增：以便放置覆蓋層 */
+		}
+		/* 新增：讓 section 中的 table 置中 */
+		section table {
+			margin: 0 auto;
+		}
+		/* 自訂勾選框樣式 */
+		input[type="checkbox"] {
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			appearance: none;
+			width: 20px;
+			height: 20px;
+			border: 2px solid #ccc;
+			border-radius: 4px;
+			vertical-align: middle;
+			margin-right: 8px;
+			position: relative;
+			cursor: pointer;
+		}
+		input[type="checkbox"]:checked {
+			background-color: #4CAF50;
+			border-color: #4CAF50;
+		}
+		input[type="checkbox"]:checked::after {
+			content: '✓';
+			position: absolute;
+			top: 0;
+			left: 4px;
+			color: white;
+			font-size: 16px;
+		}
+		/* 調整勾選框旁 label 的字體與間距 */
+		label {
+			font-size: 16px;
+			cursor: pointer;
+		}
 	</style>
 </head>
 <body>
 	<h1>數學成績查詢系統</h1>
-	<div class="query-container">
-		<input type="text" id="query" placeholder="請輸入姓名或學號" />
-		<input type="password" id="password" placeholder="請輸入密碼" />
-		<button id="searchBtn">查詢</button>
+	<!-- 新增：登出按鈕 -->
+	<button id="logoutBtn">登出</button>
+	<!-- 修改：將登入表單包在美化方框中 -->
+	<div class="login-box">
+		<div class="query-container">
+			<input type="text" id="query" placeholder="請輸入姓名或學號" />
+			<input type="password" id="password" placeholder="請輸入密碼" />
+			<!-- 新增：保持登入勾選框 -->
+			<label><input type="checkbox" id="keepLogin">保持登入</label>
+			<button id="searchBtn">查詢</button>
+		</div>
 	</div>
 	<div id="result">
 	</div>
 	<script>
+		// 新增：cookie 操作函式
+		function setCookie(name, value, days) {
+			let expires = "";
+			if (days) {
+				const date = new Date();
+				date.setTime(date.getTime() + (days*24*60*60*1000));
+				expires = "; expires=" + date.toUTCString();
+			}
+			document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+		}
+		function getCookie(name) {
+			const nameEQ = name + "=";
+			const ca = document.cookie.split(';');
+			for(let i=0;i < ca.length;i++) {
+				let c = ca[i];
+				while (c.charAt(0)==' ') c = c.substring(1,c.length);
+				if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+			}
+			return null;
+		}
+		function deleteCookie(name) {   
+			document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+		}
+
+		// 自動登入處理：檢查 cookie 中是否有 username 和 password
+		window.addEventListener('load', () => {
+			const username = getCookie("username");
+			const password = getCookie("password");
+			if(username) {
+				document.getElementById("query").value = username;
+			}
+			if(username && password) {
+				document.getElementById("password").value = password; // 修正: 使用 getElementById
+				document.getElementById("keepLogin").checked = true;
+				document.getElementById("searchBtn").click();
+			}
+		});
+
 		function objectToTable(obj, title) {
 			let html = `<section><h3>${title}</h3><table>`;
 			if(title !== "個人資料") {
@@ -140,6 +257,33 @@
 			const rawQuery = document.getElementById('query').value.trim();
 			const password = document.getElementById('password').value.trim();
 			const resultDiv = document.getElementById('result');
+
+			// 檢查是否有帳號和密碼
+			if (!rawQuery || !password) {
+				resultDiv.innerHTML = `<div class="error-message">請輸入帳號和密碼</div>`;
+				return;
+			}
+			
+			// 修改：於登入框加入覆蓋層，僅讓文字跳動
+			const loginBox = document.querySelector('.login-box');
+			const overlay = document.createElement('div');
+			overlay.id = "loginOverlay";
+			overlay.style.position = "absolute";
+			overlay.style.top = "0";
+			overlay.style.left = "0";
+			overlay.style.right = "0";
+			overlay.style.bottom = "0";
+			overlay.style.background = "rgba(255,255,255,0.8)";
+			overlay.style.display = "flex";
+			overlay.style.alignItems = "center";
+			overlay.style.justifyContent = "center";
+			const span = document.createElement('span');
+			span.innerText = "登入中...";
+			span.style.animation = "bounce 1s infinite";
+			overlay.appendChild(span);
+			loginBox.appendChild(overlay);
+			
+			const keepLogin = document.getElementById('keepLogin').checked;
 			resultDiv.innerHTML = "<div class='loading-message'>載入中...</div>";
 			try {
 				const res = await fetch("https://cc4pkp9n-80.asse.devtunnels.ms/grade", {
@@ -148,9 +292,15 @@
 					body: JSON.stringify({ query: rawQuery, password: password })
 				});
 				const data = await res.json();
-				// 新增：檢查返回資料是否包含 error，若有則顯示錯誤訊息
+				// 處理登入失敗：若回傳 error，顯示「登入失敗」彈窗提示
 				if (data.error) {
-					resultDiv.innerHTML = `<div class="error-message">查詢失敗: ${data.error}</div>`;
+					alert("登入失敗"); // 新增：彈窗提示
+					resultDiv.innerHTML = `<div class="error-message">登入失敗</div>`;
+					document.getElementById('password').value = "";
+					if(document.getElementById("loginOverlay")) {
+						document.getElementById("loginOverlay").remove();
+					}
+					document.querySelector('.login-box').style.display = "block";
 					return;
 				}
 				let html = "";
@@ -168,14 +318,46 @@
 					html += "<section><h3>總成績</h3>查無總成績資料</section>";
 				}
 				resultDiv.innerHTML = html;
+				
+				// 儲存 cookie：一定儲存 username，如勾選保持登入則也儲存 password，否則移除 password cookie
+				setCookie("username", rawQuery, 7);
+				if (keepLogin) {
+					setCookie("password", password, 7);
+				} else {
+					deleteCookie("password");
+				}
+				// 顯示登出按鈕
+				document.getElementById("logoutBtn").style.display = "block";
+				// 隱藏登入介面
+				document.querySelector('.login-box').style.display = "none";
 			} catch (error) {
-				resultDiv.innerHTML = `<div class="error-message">查詢失敗: ${error}</div>`;
+				alert("登入失敗"); // 新增：彈窗提示
+				resultDiv.innerHTML = `<div class="error-message">登入失敗</div>`;
+				document.getElementById('password').value = "";
+				if(document.getElementById("loginOverlay")) {
+					document.getElementById("loginOverlay").remove();
+				}
+				document.querySelector('.login-box').style.display = "block";
 			}
 		});
 		document.getElementById('query').addEventListener('keydown', (e) => {
 			if (e.key === 'Enter') {
 				document.getElementById('searchBtn').click();
 			}
+		});
+		// 修改：登出按鈕事件，僅清除 password cookie 並移除登入中覆蓋層
+		document.getElementById("logoutBtn").addEventListener("click", () => {
+			deleteCookie("password");
+			// 清除密碼欄位與隱藏登出按鈕
+			document.getElementById('password').value = "";
+			document.getElementById("logoutBtn").style.display = "none";
+			
+			// 新增：移除登入框中遺留的覆蓋層
+			if (document.getElementById("loginOverlay")) {
+				document.getElementById("loginOverlay").remove();
+			}
+			// 顯示登入介面
+			document.querySelector('.login-box').style.display = "block";
 		});
 	</script>
 </body>
