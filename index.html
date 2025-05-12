@@ -29,12 +29,13 @@
 			text-align: center;
 		}
 		section { 
-			/* 修改：將 margin 調整為置中 */
+			/* 修改：將 margin 調整為置中 並加入 padding 增加區塊內空間 */
 			margin: 20px auto; 
 			max-width: 500px; 
 			border: 1px solid #add8e6;
 			background-color: #f0f8ff;
 			border-radius: 4px;
+			padding: 20px; /* 新增：區塊內部間距 */
 		}
 		.query-container {
 			text-align: center;
@@ -219,7 +220,12 @@
 				html += "<tr><th>項目</th><th>成績</th></tr>";
 			}
 			for(let key in obj) {
-				html += `<tr><td>${key}</td><td>${obj[key]}</td></tr>`;
+				// 修改：若是個人資料，項目名稱置中
+				if(title === "個人資料") {
+					html += `<tr><td style="text-align: center;">${key}</td><td>${obj[key]}</td></tr>`;
+				} else {
+					html += `<tr><td>${key}</td><td>${obj[key]}</td></tr>`;
+				}
 			}
 			html += "</table></section>";
 			return html;
