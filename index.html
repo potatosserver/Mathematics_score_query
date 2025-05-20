@@ -291,7 +291,6 @@
 					body: JSON.stringify({ query: rawQuery, password: password })
 				});
 				const data = await res.json();
-				// 處理登入失敗：若回傳 error，顯示錯誤提示
 				if (data.error) {
 					alert("登入失敗");
 					errorMsg.innerText = "登入失敗";
